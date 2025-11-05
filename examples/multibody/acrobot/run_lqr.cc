@@ -8,6 +8,7 @@
 #include "drake/multibody/benchmarks/acrobot/make_acrobot_plant.h"
 #include "drake/multibody/parsing/parser.h"
 #include "drake/multibody/tree/revolute_joint.h"
+#include "drake/multibody/tree/universal_joint.h"
 #include "drake/systems/analysis/simulator.h"
 #include "drake/systems/controllers/linear_quadratic_regulator.h"
 #include "drake/systems/framework/diagram_builder.h"
@@ -17,12 +18,15 @@
 namespace drake {
 
 using Eigen::Vector2d;
+using Eigen::Vector3d;
+using Eigen::Vector4d;
 using geometry::SceneGraph;
 using multibody::AddMultibodyPlantSceneGraph;
 using multibody::JointActuator;
 using multibody::MultibodyPlant;
 using multibody::Parser;
 using multibody::RevoluteJoint;
+using multibody::UniversalJoint;
 using multibody::benchmarks::acrobot::AcrobotParameters;
 using multibody::benchmarks::acrobot::MakeAcrobotPlant;
 using systems::Context;
@@ -45,14 +49,15 @@ DEFINE_bool(time_stepping, true,
             "periodic updates. "
             "If 'false', the plant is modeled as a continuous system.");
 
-// This helper method makes an LQR controller to balance an acrobot model
-// specified in the SDF file `file_name`.
+// // This helper method makes an LQR controller to balance an acrobot model
+// // specified in the SDF file `file_name`.
 std::unique_ptr<systems::AffineSystem<double>> MakeBalancingLQRController(
     const std::string& acrobot_url) {
   // LinearQuadraticRegulator() below requires the controller's model of the
   // plant to only have a single input port corresponding to the actuation.
   // Therefore we create a new model that meets this requirement. (a model
-  // created along with a SceneGraph for simulation would also have input ports
+  // created along with a SceneGraph for simulation would also have input
+  // ports
   // to interact with that SceneGraph).
   MultibodyPlant<double> acrobot(0.0);
   Parser parser(&acrobot);
@@ -60,30 +65,46 @@ std::unique_ptr<systems::AffineSystem<double>> MakeBalancingLQRController(
   // We are done defining the model.
   acrobot.Finalize();
 
-  const RevoluteJoint<double>& shoulder =
-      acrobot.GetJointByName<RevoluteJoint>("ShoulderJoint");
-  const RevoluteJoint<double>& elbow =
-      acrobot.GetJointByName<RevoluteJoint>("ElbowJoint");
+//   UniversalJoint<double>& shoulder =
+//       acrobot.GetMutableJointByName<UniversalJoint>("ShoulderJoint");
+  RevoluteJoint<double>& elbow_a =
+      acrobot.GetMutableJointByName<RevoluteJoint>("ElbowJointA");
+  RevoluteJoint<double>& elbow_b =
+      acrobot.GetMutableJointByName<RevoluteJoint>("ElbowJointB");
+
   std::unique_ptr<Context<double>> context = acrobot.CreateDefaultContext();
 
   // Set nominal actuation torque to zero.
   const InputPort<double>& actuation_port = acrobot.get_actuation_input_port();
-  actuation_port.FixValue(context.get(), 0.0);
+  actuation_port.FixValue(context.get(), Vector2d{0.0, 0.0});
   acrobot.get_applied_generalized_force_input_port().FixValue(
-      context.get(), Vector2d::Constant(0.0));
+      context.get(), Vector4d::Constant(0.0));
 
-  shoulder.set_angle(context.get(), M_PI);
-  shoulder.set_angular_rate(context.get(), 0.0);
-  elbow.set_angle(context.get(), 0.0);
-  elbow.set_angular_rate(context.get(), 0.0);
+//   shoulder.set_angles(context.get(), {0.0, 0.0});
+//   shoulder.set_angular_rates(context.get(), {0.0, 0.0});
+  elbow_a.set_angle(context.get(), 0.0);
+  elbow_a.set_angular_rate(context.get(), 0.0);
+  elbow_b.set_angle(context.get(), 0.0);
+  elbow_b.set_angular_rate(context.get(), 0.0);
+
+  //   shoulder.set_default_angles({M_PI, 0.0});
+  //   elbow_a.set_default_angle(0.0);
+  //   elbow_b.set_default_angle(0.0);
 
   // Setup LQR Cost matrices (penalize position error 10x more than velocity
   // to roughly address difference in units, using sqrt(g/l) as the time
   // constant.
-  Eigen::Matrix4d Q = Eigen::Matrix4d::Identity();
-  Q(0, 0) = 10;
-  Q(1, 1) = 10;
-  Vector1d R = Vector1d::Constant(1);
+  Eigen::Matrix<double, 8, 8> Q = Eigen::Matrix<double, 8, 8>::Identity();
+  Q(0, 0) = 10.0;
+  Q(1, 1) = 10.0;
+  Q(2, 2) = 10.0;
+  Q(3, 3) = 10.0;
+
+  Eigen::Matrix2d R;
+  R(0, 0) = 1.0;
+  R(1, 1) = 1.0;
+  R(0, 1) = 0.05;
+  R(1, 0) = 0.05;
 
   return systems::controllers::LinearQuadraticRegulator(
       acrobot, *context, Q, R,
@@ -107,19 +128,25 @@ int do_main() {
   // We are done defining the model.
   acrobot.Finalize();
 
-  DRAKE_DEMAND(acrobot.num_actuators() == 1);
-  DRAKE_DEMAND(acrobot.num_actuated_dofs() == 1);
+  DRAKE_DEMAND(acrobot.num_actuators() == 2);
+  DRAKE_DEMAND(acrobot.num_actuated_dofs() == 2);
 
-  RevoluteJoint<double>& shoulder =
-      acrobot.GetMutableJointByName<RevoluteJoint>("ShoulderJoint");
-  RevoluteJoint<double>& elbow =
-      acrobot.GetMutableJointByName<RevoluteJoint>("ElbowJoint");
+  //    UniversalJoint<double>& shoulder =
+  //        acrobot.GetMutableJointByName<UniversalJoint>("ShoulderJoint");
+  RevoluteJoint<double>& elbow_a =
+      acrobot.GetMutableJointByName<RevoluteJoint>("ElbowJointA");
+  RevoluteJoint<double>& elbow_b =
+      acrobot.GetMutableJointByName<RevoluteJoint>("ElbowJointB");
 
   // Drake's parser will default the name of the actuator to match the name of
   // the joint it actuates.
-  const JointActuator<double>& actuator =
-      acrobot.GetJointActuatorByName("ElbowJoint");
-  DRAKE_DEMAND(actuator.joint().name() == "ElbowJoint");
+  const JointActuator<double>& actuator_a =
+      acrobot.GetJointActuatorByName("ElbowJointA");
+  DRAKE_DEMAND(actuator_a.joint().name() == "ElbowJointA");
+
+  const JointActuator<double>& actuator_b =
+      acrobot.GetJointActuatorByName("ElbowJointB");
+  DRAKE_DEMAND(actuator_b.joint().name() == "ElbowJointB");
 
   // For this example the controller's model of the plant exactly matches the
   // plant to be controlled (in reality there would always be a mismatch).
@@ -139,9 +166,9 @@ int do_main() {
   RandomGenerator generator;
 
   // Setup distribution for random initial conditions.
-  std::normal_distribution<symbolic::Expression> gaussian;
-  shoulder.set_random_angle_distribution(M_PI + 0.02 * gaussian(generator));
-  elbow.set_random_angle_distribution(0.05 * gaussian(generator));
+  std::normal_distribution<symbolic::Expression> gaussian(0.0, 0.006);
+  elbow_a.set_random_angle_distribution({gaussian(generator)});
+  elbow_b.set_random_angle_distribution({gaussian(generator)});
 
   for (int i = 0; i < 5; i++) {
     simulator.get_mutable_context().SetTime(0.0);

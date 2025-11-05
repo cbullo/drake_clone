@@ -7,28 +7,28 @@
     <link name="Link1">
       <!-- The origin of the Link1 frame is defined to be coincident with
            the origin of the x-z plane in the world frame. -->
-      <pose>0 0.15 0 0 0 0</pose>
+      <pose>0 0 0 0 0 0</pose>
       <inertial>
-        <pose>0 0 -0.5 0 0 0</pose>
-        <mass>1</mass>
+        <pose>0 0 0.5 0 0 0</pose>
+        <mass>0.1</mass>
         <!-- This inertia is based on a solid cylinder with
              radius=0.001 meters and height=1.0 meters. -->
         <!-- For this model we could make izz = 0 however, sdformat will throw
              an exception. -->
         <inertia>
-          <ixx>0.083</ixx>
-          <iyy>0.083</iyy>
-          <izz>5e-7</izz>
+          <ixx>0.0084</ixx>
+          <iyy>0.0084</iyy>
+          <izz>0.000125</izz>
           <ixy>0</ixy>
           <ixz>0</ixz>
           <iyz>0</iyz>
         </inertia>
       </inertial>
       <visual name="Link1_visual">
-        <pose>0 0 -0.5 0 0 0</pose>
+        <pose>0 0 0.5 0 0 0</pose>
         <geometry>
           <cylinder>
-            <length>1.1</length>
+            <length>1</length>
             <radius>0.05</radius>
           </cylinder>
         </geometry>
@@ -49,59 +49,62 @@
         </material>
       </visual>
     </link>
-    <joint name="ShoulderJoint" type="revolute">
+    <joint name="ShoulderJoint" type="universal">
       <child>Link1</child>
       <parent>world</parent>
       <axis>
+        <xyz expressed_in="__model__">1 0 0</xyz>
+        <limit>
+          <!-- Drake parses a zero effort joint as an un-actuated joint. -->
+          <effort>0</effort>
+        </limit>
+      </axis>
+      <axis2>
         <xyz expressed_in="__model__">0 1 0</xyz>
         <limit>
           <!-- Drake parses a zero effort joint as an un-actuated joint. -->
           <effort>0</effort>
         </limit>
-        <dynamics>
-          <damping>0.1</damping>
-        </dynamics>
-      </axis>
+      </axis2>
     </joint>
-    <link name="Link2">
-      <!-- The origin of the Link2 frame is defined to be coincident with
+    <link name="Dummy">
+    <!-- The origin of the Link2 frame is defined to be coincident with
            the origin of the x-z plane in the elbow joint frame. -->
-      <pose>0 0.25 -1 0 0 0</pose>
+      <pose>0 0 1 0 0 0</pose>
       <inertial>
-        <pose>0 0 -1 0 0 0</pose>
-        <mass>1</mass>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0</mass>
         <!-- This inertia is based on a solid cylinder with
              radius=1.0 meters and height=2.0 meters. -->
         <!-- For this model we could make izz = 0 however, sdformat will throw
              an exception. -->
         <inertia>
-          <ixx>0.33</ixx>
-          <iyy>0.33</iyy>
-          <izz>5e-7</izz>
+          <ixx>0</ixx>
+          <iyy>0</iyy>
+          <izz>0</izz>
           <ixy>0</ixy>
           <ixz>0</ixz>
           <iyz>0</iyz>
         </inertia>
       </inertial>
-      <visual name="Link2_visual">
-        <pose>0 0 -1 0 0 0</pose>
+      <visual name="Dummy_visual">
+        <pose>0 0 0 0 0 0</pose>
         <geometry>
-          <cylinder>
-            <length>2.1</length>
-            <radius>0.05</radius>
-          </cylinder>
+          <sphere>
+            <radius>0.125</radius>
+          </sphere>
         </geometry>
         <material>
-          <diffuse>1 0 0 1</diffuse>
+          <diffuse>0.9 0.5 0.5 1</diffuse>
         </material>
       </visual>
     </link>
-    <joint name="ElbowJoint" type="revolute">
+    <joint name="ElbowJointA" type="revolute">
       <parent>Link1</parent>
-      <child>Link2</child>
+      <child>Dummy</child>
       <!-- Pose X_CJ of the joint frame J in the frame C of the child link -->
       <axis>
-        <xyz expressed_in="__model__">0 1 0</xyz>
+        <xyz expressed_in="__model__">1 0 0</xyz>
         <limit>
           <!-- No limit provided. sdformat defaults to -1, which we parse as
                an actuated joint. -->
@@ -111,5 +114,88 @@
         </dynamics>
       </axis>
     </joint>
+    <link name="Link2">
+      <!-- The origin of the Link2 frame is defined to be coincident with
+           the origin of the x-z plane in the elbow joint frame. -->
+      <pose>0 0 1 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0.5 0 0 0</pose>
+        <mass>0.1</mass>
+        <!-- This inertia is based on a solid cylinder with
+             radius=1.0 meters and height=2.0 meters. -->
+        <!-- For this model we could make izz = 0 however, sdformat will throw
+             an exception. -->
+        <inertia>
+          <ixx>0.0084</ixx>
+          <iyy>0.0084</iyy>
+          <izz>0.000125</izz>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+        </inertia>
+      </inertial>
+      <visual name="Link2_visual">
+        <pose>0 0 0.5 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>1</length>
+            <radius>0.05</radius>
+          </cylinder>
+        </geometry>
+        <material>
+          <diffuse>1 0 0 1</diffuse>
+        </material>
+      </visual>
+    </link>
+    <joint name="ElbowJointB" type="revolute">
+      <parent>Dummy</parent>
+      <child>Link2</child>
+      <!-- Pose X_CJ of the joint frame J in the frame C of the child link -->
+      <axis>
+        <xyz expressed_in="__model__">0 1 0</xyz>
+        <limit>
+          <!-- No limit provided. sdformat defaults to -1, which we parse as
+               an actuated joint. -->
+        </limit>
+        <dynamics>
+          <damping>0.01</damping>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name="Body">
+      <pose>0 0 2 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.4</mass>
+        <!-- This inertia is based on a solid cylinder with
+             radius=1.0 meters and height=2.0 meters. -->
+        <!-- For this model we could make izz = 0 however, sdformat will throw
+             an exception. -->
+        <inertia>
+          <ixx>0.0144</ixx>
+          <iyy>0.0144</iyy>
+          <izz>0.0144</izz>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+        </inertia>
+      </inertial>
+      <visual name="Body_visual">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>0.3</radius>
+          </sphere>
+        </geometry>
+        <material>
+          <diffuse>1 0 0 1</diffuse>
+        </material>
+      </visual>
+    </link>
+    <joint name="BodyJoint" type="fixed">
+      <parent>Link2</parent>
+      <child>Body</child>
+    </joint>
+
   </model>
 </sdf>
