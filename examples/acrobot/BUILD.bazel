@@ -372,6 +372,26 @@ drake_cc_binary(
     ],
 )
 
+drake_cc_binary(
+    name = "jumper",
+    srcs = ["jumper.cc"],
+    test_rule_args = [
+        "-simulation_sec=1.0",
+        "-realtime_factor=0.0",
+    ],
+    deps = [
+        ":acrobot_geometry",
+        ":acrobot_lcm",
+        ":acrobot_plant",
+        "//geometry:drake_visualizer",
+        "//systems/analysis:simulator",
+        "//systems/controllers:linear_quadratic_regulator",
+        "//systems/lcm",
+        "@gflags",
+    ],
+)
+
+
 drake_py_unittest(
     name = "acrobot_io_test",
     data = [

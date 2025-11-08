@@ -65,8 +65,8 @@ std::unique_ptr<systems::AffineSystem<double>> MakeBalancingLQRController(
   // We are done defining the model.
   acrobot.Finalize();
 
-//   UniversalJoint<double>& shoulder =
-//       acrobot.GetMutableJointByName<UniversalJoint>("ShoulderJoint");
+  //   UniversalJoint<double>& shoulder =
+  //       acrobot.GetMutableJointByName<UniversalJoint>("ShoulderJoint");
   RevoluteJoint<double>& elbow_a =
       acrobot.GetMutableJointByName<RevoluteJoint>("ElbowJointA");
   RevoluteJoint<double>& elbow_b =
@@ -80,8 +80,8 @@ std::unique_ptr<systems::AffineSystem<double>> MakeBalancingLQRController(
   acrobot.get_applied_generalized_force_input_port().FixValue(
       context.get(), Vector4d::Constant(0.0));
 
-//   shoulder.set_angles(context.get(), {0.0, 0.0});
-//   shoulder.set_angular_rates(context.get(), {0.0, 0.0});
+  //   shoulder.set_angles(context.get(), {0.0, 0.0});
+  //   shoulder.set_angular_rates(context.get(), {0.0, 0.0});
   elbow_a.set_angle(context.get(), 0.0);
   elbow_a.set_angular_rate(context.get(), 0.0);
   elbow_b.set_angle(context.get(), 0.0);
@@ -99,12 +99,17 @@ std::unique_ptr<systems::AffineSystem<double>> MakeBalancingLQRController(
   Q(1, 1) = 10.0;
   Q(2, 2) = 10.0;
   Q(3, 3) = 10.0;
+  Q(4, 4) = 1.0;
+  Q(5, 5) = 1.0;
+  Q(6, 6) = 1.0;
+  Q(7, 7) = 1.0;
+
 
   Eigen::Matrix2d R;
-  R(0, 0) = 1.0;
-  R(1, 1) = 1.0;
-  R(0, 1) = 0.05;
-  R(1, 0) = 0.05;
+  R(0, 0) = 10.0;
+  R(1, 1) = 10.0;
+  R(0, 1) = 0.0;
+  R(1, 0) = 0.0;
 
   return systems::controllers::LinearQuadraticRegulator(
       acrobot, *context, Q, R,
@@ -166,11 +171,11 @@ int do_main() {
   RandomGenerator generator;
 
   // Setup distribution for random initial conditions.
-  std::normal_distribution<symbolic::Expression> gaussian(0.0, 0.006);
+  std::normal_distribution<symbolic::Expression> gaussian(0.0, 0.2);
   elbow_a.set_random_angle_distribution({gaussian(generator)});
   elbow_b.set_random_angle_distribution({gaussian(generator)});
 
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 15; i++) {
     simulator.get_mutable_context().SetTime(0.0);
     simulator.get_system().SetRandomContext(&simulator.get_mutable_context(),
                                             &generator);

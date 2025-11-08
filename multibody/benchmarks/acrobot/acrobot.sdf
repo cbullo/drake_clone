@@ -8,22 +8,6 @@
       <!-- The origin of the Link1 frame is defined to be coincident with
            the origin of the x-z plane in the world frame. -->
       <pose>0 0 0 0 0 0</pose>
-      <inertial>
-        <pose>0 0 0.5 0 0 0</pose>
-        <mass>0.1</mass>
-        <!-- This inertia is based on a solid cylinder with
-             radius=0.001 meters and height=1.0 meters. -->
-        <!-- For this model we could make izz = 0 however, sdformat will throw
-             an exception. -->
-        <inertia>
-          <ixx>0.0084</ixx>
-          <iyy>0.0084</iyy>
-          <izz>0.000125</izz>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyz>0</iyz>
-        </inertia>
-      </inertial>
       <visual name="Link1_visual">
         <pose>0 0 0.5 0 0 0</pose>
         <geometry>
@@ -71,22 +55,6 @@
     <!-- The origin of the Link2 frame is defined to be coincident with
            the origin of the x-z plane in the elbow joint frame. -->
       <pose>0 0 1 0 0 0</pose>
-      <inertial>
-        <pose>0 0 0 0 0 0</pose>
-        <mass>0</mass>
-        <!-- This inertia is based on a solid cylinder with
-             radius=1.0 meters and height=2.0 meters. -->
-        <!-- For this model we could make izz = 0 however, sdformat will throw
-             an exception. -->
-        <inertia>
-          <ixx>0</ixx>
-          <iyy>0</iyy>
-          <izz>0</izz>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyz>0</iyz>
-        </inertia>
-      </inertial>
       <visual name="Dummy_visual">
         <pose>0 0 0 0 0 0</pose>
         <geometry>
@@ -110,7 +78,7 @@
                an actuated joint. -->
         </limit>
         <dynamics>
-          <damping>0.1</damping>
+          <damping>0.01</damping>
         </dynamics>
       </axis>
     </joint>
@@ -118,22 +86,6 @@
       <!-- The origin of the Link2 frame is defined to be coincident with
            the origin of the x-z plane in the elbow joint frame. -->
       <pose>0 0 1 0 0 0</pose>
-      <inertial>
-        <pose>0 0 0.5 0 0 0</pose>
-        <mass>0.1</mass>
-        <!-- This inertia is based on a solid cylinder with
-             radius=1.0 meters and height=2.0 meters. -->
-        <!-- For this model we could make izz = 0 however, sdformat will throw
-             an exception. -->
-        <inertia>
-          <ixx>0.0084</ixx>
-          <iyy>0.0084</iyy>
-          <izz>0.000125</izz>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyz>0</iyz>
-        </inertia>
-      </inertial>
       <visual name="Link2_visual">
         <pose>0 0 0.5 0 0 0</pose>
         <geometry>
